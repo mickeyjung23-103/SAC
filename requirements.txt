@@ -1,8 +1,9 @@
-fastapi
-uvicorn[standard]
-SQLAlchemy
-asyncpg
-passlib
+fastapi>=0.115
+uvicorn[standard]>=0.30
+gunicorn>=21.2
+
+SQLAlchemy>=2.0
+asyncpg>=0.29
+
+passlib[bcrypt]>=1.7.4
 bcrypt==4.3.0
-gunicorn
-psycopg2-binary
