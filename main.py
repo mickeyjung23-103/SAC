@@ -19,7 +19,7 @@ from fastapi.responses import FileResponse
 # --- DB (SQLAlchemy) ---
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Boolean, select
+from sqlalchemy import Column, Integer, String, Boolean, select, BigInteger
 from sqlalchemy.orm import sessionmaker
 
 # --- Security (Password) ---
