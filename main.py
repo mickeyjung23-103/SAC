@@ -12,6 +12,10 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+import os 
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
 # --- DB (SQLAlchemy) ---
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
@@ -86,7 +90,8 @@ def load_strategy_from_string(code_string: str):
 # =========================
 # 2) 기본 설정 및 상수
 # =========================
-DATABASE_URL = "sqlite+aiosqlite:///./tournament.db"
+#DATABASE_URL = "sqlite+aiosqlite:///./tournament.db"
+DATABASE_URL = os.environ.get("DATABASE_URL")
 engine = create_async_engine(DATABASE_URL)
 AsyncSessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 Base = declarative_base()
@@ -416,30 +421,6 @@ async def play_match_async_check(
         history1.append(move1); history2.append(move2)
 
     return (s1_id, s2_id, 0, 0, 0, None, None)
-
-# 풀(Pool) 헬퍼
-def _run_pool_tasks(context, worker_func, tasks, timeout_per_task) -> List:
-    results = []
-    try:
-        with context.Pool(processes=mp.cpu_count()) as pool:
-            async_results = [
-                pool.apply_async(worker_func, args=(args,))
-                for args in tasks
-            ]
-            for i, res in enumerate(async_results):
-                task_input = tasks[i]
-                try:
-                    result = res.get(timeout=timeout_per_task)
-                    results.append(result)
-                except mp.TimeoutError:
-                    # 고속 풀리그에서만 사용하므로 여기선 사용 안 함
-                    results.append(None)
-                except Exception as e:
-                    results.append(None)
-        return results
-    except Exception as e:
-        print(f"[치명적 오류] Pool 생성/관리 실패: {e}")
-        return []
 
 
 async def run_tournament(db: AsyncSession):
@@ -772,8 +753,9 @@ async def shutdown():
 # =========================
 if __name__ == "__main__":
     import uvicorn
-    print("--- 백엔드 서버를 http://127.0.0.1:8000 에서 시작합니다 ---")
+    # ✅ (변경) "127.0.0.1" -> "0.0.0.0"
+    print("--- 백엔드 서버를 http://0.0.0.0:8000 에서 시작합니다 ---")
     try:
-        uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)
+        uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
     finally:
         terminate_all_runners()
