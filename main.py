@@ -146,8 +146,12 @@ class Strategy(Base):
     user_name = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     code_string = Column(String, nullable=False)
-    total_score = Column(Integer, default=0, nullable=False)
-    avg_score = Column(Integer, default=0, nullable=False)
+    
+    # ✅ (수정) Integer -> BigInteger
+    total_score = Column(BigInteger, default=0, nullable=False)
+    # ✅ (수정) Integer -> BigInteger
+    avg_score = Column(BigInteger, default=0, nullable=False)
+    
     error_flag = Column(Boolean, default=False, nullable=False)
     error_message = Column(String, nullable=True)
 
