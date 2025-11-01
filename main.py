@@ -120,6 +120,7 @@ PAYOFFS = {
 MATCH_TIME_BUDGET_SEC = 10
 PER_CALL_HARD_CAP_SEC = 5
 RUNNER_STARTUP_GRACE_SEC = 8.0  # 데몬 러너 최초 시작만 적용
+SANITY_CHECK_TIMEOUT_SEC = 5.0
 
 # ns 단위
 MATCH_TIME_BUDGET_NS = int(MATCH_TIME_BUDGET_SEC * 1e9)
@@ -433,6 +434,51 @@ async def play_match_async_check(
 
     return (s1_id, s2_id, 0, 0, 0, None, None)
 
+def load_and_sanity_check_worker(args: Tuple) -> Tuple:
+    """(id, code) -> (id, error_message | None)"""
+    s_id, s_code = args
+    try:
+        # load_strategy_from_string는 샌드박싱된 exec를 사용
+        func, err_msg = load_strategy_from_string(s_code)
+        if err_msg:
+            return s_id, f"[Compile Error] {err_msg}"
+        # 1회 실행
+        func(tuple(), tuple()) 
+        return s_id, None
+    except Exception as e:
+        # 이 프로세스 내에서 발생하는 모든 오류 (e.g. while True의 Timeout)
+        return s_id, f"[Sanity Check Error] {e}\n{traceback.format_exc()}"
+
+def _run_pool_tasks(context, worker_func, tasks, timeout_per_task) -> List:
+    results = []
+    try:
+        with context.Pool(processes=mp.cpu_count()) as pool:
+            async_results = [
+                pool.apply_async(worker_func, args=(args,))
+                for args in tasks
+            ]
+            for i, res in enumerate(async_results):
+                task_input = tasks[i]
+                try:
+                    result = res.get(timeout=timeout_per_task)
+                    results.append(result)
+                except mp.TimeoutError:
+                    # ✅ (수정) v11과 달리, 타임아웃 시 에러 튜플을 반환
+                    if worker_func == load_and_sanity_check_worker:
+                        results.append((task_input[0], "[Sanity Check Error] 하드 타임아웃 (e.g., 'while True')"))
+                    else:
+                        results.append(None) 
+                except Exception as e:
+                    # ✅ (수정) v11과 달리, 오류 시 에러 튜플을 반환
+                    if worker_func == load_and_sanity_check_worker:
+                         results.append((task_input[0], f"[Sanity Check Error] Pool Worker Error: {e}"))
+                    else:
+                        results.append(None)
+            return results
+    except Exception as e:
+        print(f"[치명적 오류] Pool 생성/관리 실패: {e}")
+        return []
+
 
 async def run_tournament(db: AsyncSession):
     """
@@ -609,18 +655,14 @@ async def run_tournament(db: AsyncSession):
 # =========================
 @app.post("/submit", status_code=status.HTTP_201_CREATED)
 async def submit_strategy(submission: Submission, db: AsyncSession = Depends(get_db)):
-    # 1) 사용자 전략 upsert
+    # 1) 사용자 전략 upsert (v11과 동일)
     result = await db.execute(
         select(Strategy).where(Strategy.user_name == submission.user_name)
     )
     db_strategy = result.scalar_one_or_none()
-
     if db_strategy:
         if not verify_password(submission.password, db_strategy.hashed_password):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="비밀번호가 틀렸습니다.",
-            )
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="비밀번호가 틀렸습니다.")
         db_strategy.code_string = submission.code
     else:
         hashed_password = get_password_hash(submission.password)
@@ -630,43 +672,59 @@ async def submit_strategy(submission: Submission, db: AsyncSession = Depends(get
             code_string=submission.code
         )
         db.add(db_strategy)
-
-    # 우선 커밋(새 유저 ID 발급)
+    
     await db.commit()
     await db.refresh(db_strategy)
 
-    # 2) 제출된 그 전략만 SANITY CHECK (제출 시점)
-    ok, msg = run_sanity_check(db_strategy.code_string)
+    # 2) ✅ (수정) Pool을 사용한 Sanity Check
+    context = mp.get_context("spawn")
+    loop = asyncio.get_running_loop()
+    
+    sanity_tasks = [(db_strategy.id, db_strategy.code_string)]
+    
+    # Pool 작업은 블로킹이므로 스레드에서 실행
+    results = await loop.run_in_executor(
+        None, 
+        _run_pool_tasks, 
+        context, 
+        load_and_sanity_check_worker, # v10의 워커 사용
+        sanity_tasks, 
+        SANITY_CHECK_TIMEOUT_SEC # ❗️(참고) SANITY_CHECK_TIMEOUT_SEC 변수 정의 필요
+    )
+    
+    s_id, error_message = results[0]
     h = _code_hash(db_strategy.code_string)
-    _sanity_cache[(db_strategy.id, h)] = (ok, msg)
-
-    if not ok:
+    
+    if error_message:
+        # Sanity Check 실패
+        _sanity_cache[(s_id, h)] = (False, error_message)
         db_strategy.error_flag = True
-        db_strategy.error_message = msg
+        db_strategy.error_message = error_message
         await db.commit()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"코드 오류(SANITY): {msg}"
+            detail=f"코드 오류(SANITY): {error_message}"
         )
     else:
+        # Sanity Check 성공
+        _sanity_cache[(s_id, h)] = (True, None)
         db_strategy.error_flag = False
         db_strategy.error_message = None
         await db.commit()
 
-    # 3) 토너먼트 실행
+    # 3) 토너먼트 실행 (v11과 동일)
     async with tournament_lock:
         await run_tournament(db)
 
-    # 4) 토너먼트 결과 반영 확인(본인 전략만 재조회)
+    # 4) 토너먼트 결과 반영 확인 (v11과 동일)
     await db.refresh(db_strategy)
     if db_strategy.error_flag:
-        # 토너먼트 중 RECHECK/정밀검증/런타임 오류로 탈락한 경우
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"토너먼트 탈락: {db_strategy.error_message or '런타임 오류 또는 타임아웃'}"
         )
-
-    # 5) 정상 통과
+    
+    # 5) 정상 통과 (v11과 동일)
     return {"detail": "코드가 성공적으로 제출/검증되었고 토너먼트에서도 통과했습니다."}
 
 @app.get("/scoreboard", response_model=List[ScoreboardEntry])
