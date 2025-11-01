@@ -294,7 +294,7 @@
 
       <button id="submitBtn" class="btn btn-primary" style="margin-top: 16px;">코드 제출</button>
       <div id="status" class="status"></div>
-      <div class="note">※ 제출 후 토너먼트가 실행됩니다. 실행 중에는 상자가 파란색으로 표시됩니다.</div>
+      <div class="note">※ 제출 후 5분 이내에 다음 토너먼트가 실행됩니다.</div>
     </main>
 
     <aside class="card sidebar">
@@ -307,13 +307,14 @@
       <h2 style="margin-top:20px">Tip</h2>
       <ul style="margin:0 0 0 18px; padding:0;">
         <li>무한루프/느린 계산은 시간초과로 실격 처리됩니다.</li>
-        <li>math, random, statistics, itertools와 같은 모듈을 import할 수 없습니다.</li>
+        <li>허용 모듈: math, random, statistics, itertools, functools, collections, heapq, bisect</li>
       </ul>
     </aside>
   </div>
 
   <script>
-    const API_BASE_URL = "";
+    /* ✅ (수정) Render 배포이므로 ""로 비워둡니다. */
+    const API_BASE_URL = ""; 
     const statusBox = document.getElementById('status');
     const nickEl   = document.getElementById('nickname');
     const passEl   = document.getElementById('password');
@@ -331,8 +332,9 @@
     function setLoading(isLoading) {
       if(isLoading) {
         submitBtn.disabled = true;
+        /* ✅ (수정) '토너먼트 진행 중' -> '제출 중' */
         submitBtn.textContent = '제출 중...';
-        showStatus('🏁 토너먼트 진행 중... 잠시만 기다려주세요.', 'progress');
+        showStatus('🏁 코드를 검증하고 제출하는 중입니다...', 'progress');
       } else {
         submitBtn.disabled = false;
         submitBtn.textContent = '코드 제출';
@@ -407,8 +409,9 @@
         if (!res.ok) {
           showStatus(`❌ 제출 실패\n${data.detail || '알 수 없는 오류'}`, 'err');
         } else {
-          showStatus('✅ 성공적으로 제출되었습니다!\n스코어보드에서 결과를 확인하세요.', 'ok');
-          fetchMyRank(user_name);
+          /* ✅ (수정) 성공 메시지 변경 */
+          showStatus('✅ 성공적으로 제출되었습니다!\n다음 토너먼트에 반영됩니다.', 'ok');
+          /* ❌ (삭제) fetchMyRank(user_name); - 제출 직후 순위 갱신 불필요 */
         }
       } catch (e) {
         showStatus(`네트워크 오류: ${e.message}`, 'err');
@@ -418,5 +421,4 @@
     });
   </script>
 </body>
-
 </html>
