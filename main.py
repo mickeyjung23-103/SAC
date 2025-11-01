@@ -814,7 +814,7 @@ async def get_my_code(payload: CodeRequest, db: AsyncSession = Depends(get_db)):
         )
     return CodeResponse(code=s.code_string or "")
 
-TOURNAMENT_INTERVAL_SEC = 60
+TOURNAMENT_INTERVAL_SEC = 600
 async def tournament_scheduler():
     await asyncio.sleep(3)  # 기동 안정화 대기
     while True:
