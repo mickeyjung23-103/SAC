@@ -739,21 +739,9 @@ async def submit_strategy(submission: Submission, db: AsyncSession = Depends(get
         db_strategy.error_flag = False
         db_strategy.error_message = None
         await db.commit()
-
-    # 3) 토너먼트 실행 (v11과 동일)
-    async with tournament_lock:
-        await run_tournament(db)
-
-    # 4) 토너먼트 결과 반영 확인 (v11과 동일)
-    await db.refresh(db_strategy)
-    if db_strategy.error_flag:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"토너먼트 탈락: {db_strategy.error_message or '런타임 오류 또는 타임아웃'}"
-        )
     
     # 5) 정상 통과 (v11과 동일)
-    return {"detail": "코드가 성공적으로 제출/검증되었고 토너먼트에서도 통과했습니다."}
+    return {"detail": "코드가 성공적으로 제출/검증되었습니다. 다음 토너먼트 주기에 자동 반영됩니다."}
 
 @app.get("/scoreboard", response_model=List[ScoreboardEntry])
 async def get_scoreboard(db: AsyncSession = Depends(get_db)):
