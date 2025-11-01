@@ -91,15 +91,7 @@ def load_strategy_from_string(code_string: str):
 # 2) 기본 설정 및 상수
 # =========================
 #DATABASE_URL = "sqlite+aiosqlite:///./tournament.db"
-RAW_DATABASE_URL = os.environ.get("DATABASE_URL")
-if not RAW_DATABASE_URL:
-    # (로컬 테스트용) 로컬에서 실행할 때 대신 사용할 주소 (없으면 에러 발생)
-    # DATABASE_URL = "sqlite+aiosqlite:///./tournament.db" 
-    raise ValueError("DATABASE_URL 환경 변수가 설정되지 않았습니다. Render 환경변수를 확인하세요.")
-else:
-    # ✅ (핵심) Render가 준 "postgresql://"를 "postgresql+asyncpg://"로 변경
-    DATABASE_URL = RAW_DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
-
+DATABASE_URL = os.environ.get("DATABASE_URL")
 engine = create_async_engine(DATABASE_URL)
 AsyncSessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 Base = declarative_base()
