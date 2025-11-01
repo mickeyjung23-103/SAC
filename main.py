@@ -199,6 +199,11 @@ def get_password_hash(password):
 # 6) 전략별 상시 데몬 러너 (Pipe + ready + marshal 바이트코드)
 # =========================
 def _runner_proc(code_bytes: bytes, conn):
+    """
+    (v11.3 수정)
+    - "ready" 신호를 보내기 전에 strategy_func()를 1회 실행합니다.
+    - 이 1회 실행이 'while True'를 잡는 Sanity Check 역할을 합니다.
+    """
     try:
         sandbox_globals = {"__builtins__": _build_allowed_builtins()}
         local_scope = {}
@@ -209,6 +214,12 @@ def _runner_proc(code_bytes: bytes, conn):
         if not isinstance(strategy_func, types.FunctionType):
             conn.send(("error", "Python 코드에서 'strategy(opponent_history, my_history)' 함수를 찾을 수 없습니다."))
             return
+
+        # --- ✅ Sanity Check: 1회 실행 ---
+        # 이 함수가 while True를 포함하면 여기서 프로세스가 멈춥니다.
+        # 부모의 'conn.recv(timeout)'가 타임아웃을 유발할 것입니다.
+        strategy_func(tuple(), tuple())
+        # ---
 
         conn.send(("ready", None))  # 로드 완료
 
@@ -224,6 +235,7 @@ def _runner_proc(code_bytes: bytes, conn):
                 conn.send(("error", f"{e}\n{traceback.format_exc()}"))
     except Exception as e:
         try:
+            # 'exec' 또는 'strategy_func()' 1회 실행 중 오류
             conn.send(("error", f"{e}\n{traceback.format_exc()}"))
         except:
             pass
