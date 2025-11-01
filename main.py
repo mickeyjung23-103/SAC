@@ -117,8 +117,8 @@ PAYOFFS = {
     ('배신', '배신'): (1, 1)
 }
 
-MATCH_TIME_BUDGET_SEC = 0.5
-PER_CALL_HARD_CAP_SEC = 0.2
+MATCH_TIME_BUDGET_SEC = 10
+PER_CALL_HARD_CAP_SEC = 5
 RUNNER_STARTUP_GRACE_SEC = 8.0  # 데몬 러너 최초 시작만 적용
 
 # ns 단위
