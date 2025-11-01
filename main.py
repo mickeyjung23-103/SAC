@@ -759,6 +759,17 @@ async def shutdown():
         pass
     terminate_all_runners()
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, RedirectResponse
+
+# 루트로 들어오면 로그인 페이지로 리다이렉트 (또는 직접 파일 반환)
+@app.get("/", include_in_schema=False)
+async def root():
+    # 리다이렉트 방식
+    return RedirectResponse(url="/static/login.html")
+
 # =========================
 # 9) (선택) uvicorn으로 서버 실행 (테스트용)
 # =========================
