@@ -183,10 +183,25 @@ async def startup():
         pass
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
     app.state.tournament_running = False
     app.state.tournament_started_at = None
     app.state.tournament_last_finished_at = None
+    app.state.tournament_next_run_at = time.time() + TOURNAMENT_INTERVAL_SEC  # ✅ 추가
+
     app.state.tournament_task = asyncio.create_task(tournament_scheduler())
+
+@app.get("/tournament_status")
+async def tournament_status():
+    now = time.time()
+    return {
+        "running": bool(app.state.tournament_running),
+        "started_at": app.state.tournament_started_at,
+        "last_finished_at": app.state.tournament_last_finished_at,
+        "next_run_at": app.state.tournament_next_run_at,
+        "server_now": now,
+        "interval_sec": TOURNAMENT_INTERVAL_SEC,
+    }
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -799,13 +814,11 @@ async def get_my_code(payload: CodeRequest, db: AsyncSession = Depends(get_db)):
         )
     return CodeResponse(code=s.code_string or "")
 
-TOURNAMENT_INTERVAL_SEC = 300
+TOURNAMENT_INTERVAL_SEC = 60
 async def tournament_scheduler():
-    # 앱 기동 직후 약간 기다렸다가 시작 (DB 준비 등)
-    await asyncio.sleep(3)
+    await asyncio.sleep(3)  # 기동 안정화 대기
     while True:
         try:
-            # 상태 플래그 (선택)
             app.state.tournament_running = True
             app.state.tournament_started_at = time.time()
 
@@ -818,8 +831,9 @@ async def tournament_scheduler():
             print(f"[Scheduler] tournament run error: {e}")
         finally:
             app.state.tournament_running = False
+            # 다음 실행 예정 시각 갱신
+            app.state.tournament_next_run_at = time.time() + TOURNAMENT_INTERVAL_SEC
 
-        # 다음 주기까지 대기
         await asyncio.sleep(TOURNAMENT_INTERVAL_SEC)
 
 @app.on_event("shutdown")
