@@ -5,3 +5,4 @@ asyncpg
 passlib
 bcrypt==4.3.0
 gunicorn
+psycopg2-binary
