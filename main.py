@@ -91,7 +91,18 @@ def load_strategy_from_string(code_string: str):
 # 2) 기본 설정 및 상수
 # =========================
 #DATABASE_URL = "sqlite+aiosqlite:///./tournament.db"
-DATABASE_URL = os.environ.get("DATABASE_URL")
+def to_asyncpg_url(url: str) -> str:
+    """Render가 주는 postgres 스킴을 async 드라이버용으로 치환."""
+    if not url:
+        raise RuntimeError("DATABASE_URL is not set")
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+asyncpg://", 1)
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    return url  # 이미 postgresql+asyncpg:// 인 경우 등
+
+DATABASE_URL = to_asyncpg_url(os.environ.get("DATABASE_URL"))
+
 engine = create_async_engine(DATABASE_URL)
 AsyncSessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 Base = declarative_base()
