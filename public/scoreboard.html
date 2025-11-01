@@ -338,6 +338,346 @@
         updateUserBox('순위: -');
       }
     }
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>스코어보드 | 폭SAC 속았수다</title>
+  <style>
+    :root {
+      --primary-color: #3949ab;
+      --primary-hover: #303f9f;
+      --dark-blue: #1a237e;
+      --danger-color: #c62828;
+      --danger-hover: #b71c1c;
+      --bg-color: #f0f2f5;
+      --card-bg: #ffffff;
+      --text-color: #333;
+      --text-light: #555;
+      --border-color: #e0e0e0;
+      --border-radius: 8px;
+      --shadow: 0 4px 12px rgba(0,0,0,.05);
+      --progress-bg: #e3f2fd;
+      --progress-color: #0d47a1;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    * { box-sizing: border-box; }
+
+    /* 상단바 */
+    .topbar {
+      background: var(--card-bg);
+      padding: 12px  24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,.05);
+      margin-bottom: 24px;
+    }
+    .topbar-container {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand {
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: var(--dark-blue);
+    }
+    .userbox {
+      font-size: 14px;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .userbox .rank {
+      font-weight: 700;
+      color: var(--dark-blue);
+    }
+    .userbox .nav-link {
+      padding: 6px 12px;
+      border: 1px solid var(--primary-color);
+      border-radius: 6px;
+      background: var(--primary-color);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .userbox .nav-link:hover {
+      background: var(--primary-hover);
+    }
+    .logout-btn {
+      padding: 6px 12px;
+      border: 1px solid var(--danger-color);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--danger-color);
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .logout-btn:hover {
+      background: var(--danger-color);
+      color: #fff;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--dark-blue);
+      margin: 0 0 12px;
+      font-size: 2.25rem;
+      font-weight: 800;
+    }
+
+    #status {
+      text-align: center;
+      color: var(--text-light);
+      margin-bottom: 20px; /* 여백 조정 */
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px; /* 여백 조정 */
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 12px; /* 패딩 조정 */
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      border: 1px solid transparent; /* 테두리 추가 */
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-color);
+      text-align: left;
+      word-wrap: break-word;
+    }
+
+    thead th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: var(--text-light);
+      border-bottom-width: 2px;
+    }
+
+    thead th.rank-cell { width: 100px; text-align: center; }
+    thead th.username-cell { width: 100%; }
+    thead th.score-cell { width: 160px; text-align: right; }
+
+    tbody tr:hover { background: #fafafa; }
+
+    .rank-cell { font-weight: 700; text-align: center; }
+    .username-cell { font-weight: 500; }
+    .score-cell { font-weight: 700; color: var(--primary-color); text-align: right; }
+
+    .my-row {
+      background: var(--progress-bg) !important;
+      border-top: 1px solid var(--progress-color);
+      border-bottom: 1px solid var(--progress-color);
+    }
+    .my-row td:first-child { font-weight: 800; }
+
+    .nav {
+      margin: 12px 0 24px;
+      text-align: center;
+    }
+    .nav a {
+      color: var(--primary-color);
+      text-decoration: none;
+      margin: 0 10px;
+      font-weight: 500;
+    }
+    .nav a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-container">
+      <div class="brand">폭SAC 속았수다</div>
+      <div class="userbox" id="userBox"></div>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1>🏆 실시간 스코어보드</h1>
+    <div class="nav">
+      <a href="about.html">소개 및 규칙</a>
+      <a href="submit.html">전략 제출</a>
+    </div>
+
+    <div id="status">
+      <span id="badge" class="badge">상태 불러오는 중…</span>
+      <span id="tick"></span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th class="rank-cell">순위</th>
+          <th class="username-cell">닉네임</th>
+          <th class="score-cell">평균 점수</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr>
+          <td colspan="3" style="text-align:center;padding:20px;color:#888;">불러오는 중...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    /* ✅ (수정) 로컬 테스트용 URL로 복원 */
+    const API_BASE_URL = ""; 
+    const tbody = document.getElementById('tbody');
+    const tickEl = document.getElementById('tick');
+    const badgeEl = document.getElementById('badge');
+    const userBoxEl = document.getElementById('userBox');
+
+    const nick = localStorage.getItem('pd_nick');
+    const pass = localStorage.getItem('pd_pass');
+
+    let serverNow = 0;
+    let nextRunAt = 0;
+    let intervalSec = 600;
+    let countdownTimer = null;
+
+    function logout() {
+      localStorage.removeItem('pd_nick');
+      localStorage.removeItem('pd_pass');
+      location.href = 'login.html';
+    }
+
+    function updateUserBox(rankText = '순위: -') {
+      if (nick) {
+        userBoxEl.innerHTML = `
+          <span id="myRank" class="rank">${rankText}</span>
+          <button id="logoutBtn" class="logout-btn">로그아웃</button>
+        `;
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+      } else {
+        userBoxEl.innerHTML = `<a href="login.html" class="nav-link">로그인</a>`;
+      }
+    }
+
+    function tick() {
+      if (serverNow === 0 || nextRunAt === 0) return;
+      serverNow += 1; // 1초 증가
+      
+      const eta = Math.max(0, Math.floor((nextRunAt - serverNow)));
+      const mm = String(Math.floor(eta / 60)).padStart(2, '0');
+      const ss = String(eta % 60).padStart(2, '0');
+      const periodMin = Math.floor(intervalSec / 60);
+
+      tickEl.textContent = `다음 토너먼트까지 ${mm}:${ss} (주기: ${periodMin}분)`;
+    }
+
+    async function fetchStatus() {
+      try {
+        const r = await fetch(`${API_BASE_URL}/tournament_status?t=${Date.now()}`, { cache: 'no-store' });
+        if (!r.ok) throw new Error(r.statusText);
+        const s = await r.json();
+
+        serverNow = s.server_now ?? (Date.now() / 1000);
+        nextRunAt = s.next_run_at ?? 0;
+        intervalSec = s.interval_sec ?? 600;
+
+        if (s.running) {
+          badgeEl.textContent = "토너먼트 진행중";
+          badgeEl.style.background = "var(--progress-bg)";
+          badgeEl.style.color = "var(--progress-color)";
+          badgeEl.style.border = "1px solid var(--progress-color)";
+        } else {
+          badgeEl.textContent = "대기중";
+          badgeEl.style.background = "#f3f3f3";
+          badgeEl.style.color = "#666";
+          badgeEl.style.border = "1px solid #ddd";
+        }
+        
+        tick(); 
+      } catch (e) {
+        badgeEl.textContent = '상태 조회 실패';
+        tickEl.textContent = '';
+        console.error(e);
+      }
+    }
+
+    async function fetchBoard() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/scoreboard?t=${Date.now()}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error(res.statusText);
+        const list = await res.json();
+
+        tbody.innerHTML = '';
+        if (!list || list.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:20px;color:#888;">아직 제출된 전략이 없습니다.</td></tr>`;
+          updateUserBox('순위: -');
+          return;
+        }
+
+        let myRankText = '순위: -';
+        const myRankIndex = nick ? list.findIndex(x => x.user_name === nick) : -1;
+
+        list.forEach((p, i) => {
+          const tr = document.createElement('tr');
+          const scaled = (p.avg_score / 1e8).toFixed(6); // 1e8 스케일
+
+          let rankDisplay = i + 1;
+          if (i === 0) rankDisplay = '🥇 1';
+          else if (i === 1) rankDisplay = '🥈 2';
+          else if (i === 2) rankDisplay = '🥉 3';
+
+          tr.innerHTML = `
+            <td class="rank-cell">${rankDisplay}</td>
+            <td class="username-cell">${p.user_name}</td>
+            <td class="score-cell">${scaled}</td>
+          `;
+
+          if (i === myRankIndex) tr.classList.add('my-row');
+          tbody.appendChild(tr);
+        });
+
+        if (myRankIndex !== -1) {
+          myRankText = `순위: ${myRankIndex + 1} / ${list.length}`;
+        }
+        updateUserBox(myRankText);
+        
+      } catch (e) {
+        console.error(e);
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:20px;color:#c00;">스코어보드 로딩 실패</td></tr>`;
+        updateUserBox('순위: -');
+      }
+    }
 
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
@@ -357,3 +697,22 @@
   </script>
 </body>
 </html>
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        fetchStatus();
+        fetchBoard();
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchStatus();
+      fetchBoard();
+      
+      setInterval(tick, 1000);
+      setInterval(fetchStatus, 10000);
+      setInterval(fetchBoard, 10000);
+    });
+  </script>
+</body>
+</html>
+
