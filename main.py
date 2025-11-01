@@ -676,38 +676,39 @@ async def submit_strategy(submission: Submission, db: AsyncSession = Depends(get
     await db.commit()
     await db.refresh(db_strategy)
 
-    # 2) ✅ (수정) Pool을 사용한 Sanity Check
-    context = mp.get_context("spawn")
+    # 2) ✅ (수정) Sanity Check를 데몬 러너 생성으로 대체
     loop = asyncio.get_running_loop()
-    
-    sanity_tasks = [(db_strategy.id, db_strategy.code_string)]
-    
-    # Pool 작업은 블로킹이므로 스레드에서 실행
-    results = await loop.run_in_executor(
-        None, 
-        _run_pool_tasks, 
-        context, 
-        load_and_sanity_check_worker, # v10의 워커 사용
-        sanity_tasks, 
-        SANITY_CHECK_TIMEOUT_SEC # ❗️(참고) SANITY_CHECK_TIMEOUT_SEC 변수 정의 필요
-    )
-    
-    s_id, error_message = results[0]
     h = _code_hash(db_strategy.code_string)
-    
-    if error_message:
-        # Sanity Check 실패
-        _sanity_cache[(s_id, h)] = (False, error_message)
+    ok = True
+    msg = None
+
+    try:
+        # get_or_create_runner (v10.3/v11) 자체가 Sanity Check입니다.
+        # 'while True' 코드는 'ready' 신호를 못 보내고 __init__에서 타임아웃됩니다.
+        await loop.run_in_executor(
+            None, 
+            get_or_create_runner, # ❗️ (참고) v11 코드 상단에 이 함수가 정의되어 있어야 함
+            db_strategy.id, 
+            db_strategy.code_string
+        )
+        
+    except Exception as e:
+        # 러너 시작 실패 (e.g., 'while True', 컴파일 오류 등)
+        ok = False
+        msg = f"[Sanity Check Error] {e}" # e.g., "init timeout/error"
+
+    # Sanity Check 결과를 캐시에 저장
+    _sanity_cache[(db_strategy.id, h)] = (ok, msg)
+
+    if not ok:
         db_strategy.error_flag = True
-        db_strategy.error_message = error_message
+        db_strategy.error_message = msg
         await db.commit()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"코드 오류(SANITY): {error_message}"
+            detail=f"코드 오류(SANITY): {msg}"
         )
     else:
-        # Sanity Check 성공
-        _sanity_cache[(s_id, h)] = (True, None)
         db_strategy.error_flag = False
         db_strategy.error_message = None
         await db.commit()
