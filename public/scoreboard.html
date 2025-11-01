@@ -281,7 +281,7 @@
 
         list.forEach((p, i) => {
           const tr = document.createElement('tr');
-          const scaled = (p.avg_score / 1e10).toFixed(6); // 소수점 6자리까지 표시
+          const scaled = (p.avg_score / 1e8).toFixed(6); // 소수점 6자리까지 표시
           
           let rankDisplay;
           if (i === 0) rankDisplay = '🥇 1';
