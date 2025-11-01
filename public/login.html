@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>로그인 | 폭SAC 속았수다</title>
+  <style>
+    :root {
+      --primary-color: #3949ab;
+      --primary-hover: #303f9f;
+      --dark-blue: #1a237e;
+      --danger-color: #c62828;
+      --danger-hover: #b71c1c;
+      --bg-color: #f0f2f5;
+      --card-bg: #ffffff;
+      --text-color: #333;
+      --text-light: #555;
+      --border-color: #ddd;
+      --border-radius: 8px;
+      --shadow: 0 4px 12px rgba(0,0,0,.05);
+      --error-color: #c62828;
+      --error-bg: #ffebee;
+      --info-color: #0d47a1;
+      --info-bg: #e3f2fd;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    
+    * { box-sizing: border-box; }
+
+    .container {
+      max-width: 440px; /* 너비 조정 */
+      margin: 60px auto;
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+    
+    h1 {
+      margin: 0 0 24px;
+      color: var(--dark-blue);
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 800;
+    }
+    
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-light);
+      margin: 16px 0 6px;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(57, 73, 171, 0.15);
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-primary {
+      background: var(--primary-color);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+    .btn-primary:disabled {
+      background: #9fa8da;
+      cursor: not-allowed;
+    }
+    
+    .nav {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+    .nav a {
+      color: var(--primary-color);
+      text-decoration: none;
+      margin: 0 8px;
+      font-weight: 500;
+    }
+    .nav a:hover {
+      text-decoration: underline;
+    }
+    
+    .status {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 6px;
+      display: none;
+      white-space: pre-wrap;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      border: 1px solid transparent;
+    }
+    
+    .error { display: block; background: var(--error-bg); color: var(--error-color); border-color: #f7c5c8; }
+    .info { display: block; background: var(--info-bg); color: var(--info-color); border-color: #b3d9f8; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>로그인</h1>
+
+    <label for="nickname">닉네임</label>
+    <input id="nickname" type="text" placeholder="예: TitForTat" />
+
+    <label for="password">비밀번호</label>
+    <input id="password" type="password" placeholder="******" />
+
+    <button id="loginBtn" class="btn btn-primary">로그인</button>
+    <div id="status" class="status"></div>
+    
+    <div class="nav" style="margin-top:20px;">
+      <a href="register.html">회원가입</a> |
+      <a href="about.html">소개</a> |
+      <a href="scoreboard.html">스코어보드</a>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = "";
+    const statusBox = document.getElementById('status');
+    const loginBtn = document.getElementById('loginBtn');
+    const nickEl = document.getElementById('nickname');
+    const passEl = document.getElementById('password');
+
+    function showStatus(msg, cls){
+      statusBox.textContent = msg;
+      statusBox.className = 'status';
+      if(cls) statusBox.classList.add(cls);
+      statusBox.style.display = 'block';
+    }
+    
+    function setLoading(isLoading) {
+      if (isLoading) {
+        loginBtn.disabled = true;
+        loginBtn.textContent = '확인 중...';
+        showStatus('자격 증명 확인 중...', 'info');
+      } else {
+        loginBtn.disabled = false;
+        loginBtn.textContent = '로그인';
+      }
+    }
+
+    async function verifyCredentials(user_name, password){
+      // /mycode 호출로 인증 검증(401이면 실패)
+      const res = await fetch(`${API_BASE_URL}/mycode`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json', 'Cache-Control': 'no-store'},
+        body: JSON.stringify({user_name, password})
+      });
+      if(!res.ok){
+        const text = await res.text();
+        let data={}; try{ data = text? JSON.parse(text):{} }catch{ data={detail:text}; }
+        const reason = data.detail || '닉네임 또는 비밀번호가 올바르지 않습니다.';
+        throw new Error(reason);
+      }
+      return true;
+    }
+    
+    async function handleLogin() {
+      const nick = nickEl.value.trim();
+      const pass = passEl.value;
+
+      statusBox.className = 'status'; statusBox.style.display='none';
+
+      if (!nick || !pass) {
+        showStatus('닉네임과 비밀번호를 입력하세요.', 'error');
+        return;
+      }
+
+      setLoading(true);
+
+      try{
+        await verifyCredentials(nick, pass);
+
+        // 성공 시에만 저장 및 이동
+        localStorage.setItem('pd_nick', nick);
+        localStorage.setItem('pd_pass', pass);
+        
+        // ✅ about.html로 이동
+        location.href = 'about.html'; 
+      }catch(e){
+        showStatus(`로그인 실패\n${e.message}`, 'error');
+        setLoading(false);
+      }
+    }
+
+    loginBtn.addEventListener('click', handleLogin);
+    passEl.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleLogin();
+    });
+    nickEl.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleLogin();
+    });
+
+    // 이미 저장된 값 있으면 채워주기
+    window.addEventListener('DOMContentLoaded', () => {
+      const n = localStorage.getItem('pd_nick') || '';
+      const p = localStorage.getItem('pd_pass') || '';
+      if (n) nickEl.value = n;
+      if (p) passEl.value = p;
+    });
+  </script>
+</body>
+</html>

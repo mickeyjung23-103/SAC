@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>소개 | 폭SAC 속았수다</title>
+  <style>
+    :root {
+      --primary-color: #3949ab;
+      --primary-hover: #303f9f;
+      --dark-blue: #1a237e;
+      --danger-color: #c62828;
+      --danger-hover: #b71c1c;
+      --bg-color: #f0f2f5;
+      --card-bg: #ffffff;
+      --text-color: #333;
+      --text-light: #555;
+      --border-color: #e0e0e0;
+      --border-radius: 8px;
+      --shadow: 0 4px 12px rgba(0,0,0,.05);
+      --progress-bg: #e3f2fd;
+      --progress-color: #0d47a1;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      line-height: 1.6;
+    }
+    
+    * { box-sizing: border-box; }
+
+    /* --- 상단바 (공통) --- */
+    .topbar {
+      background: var(--card-bg);
+      padding: 12px 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,.05);
+      margin-bottom: 24px;
+    }
+    .topbar-container {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand {
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: var(--dark-blue);
+    }
+    .userbox {
+      font-size: 14px;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .userbox .rank {
+      font-weight: 700;
+      color: var(--dark-blue);
+    }
+    .userbox .nav-link {
+      padding: 6px 12px;
+      border: 1px solid var(--primary-color);
+      border-radius: 6px;
+      background: var(--primary-color);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .userbox .nav-link:hover {
+      background: var(--primary-hover);
+    }
+    .logout-btn {
+      padding: 6px 12px;
+      border: 1px solid var(--danger-color);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--danger-color);
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .logout-btn:hover {
+      background: var(--danger-color);
+      color: #fff;
+    }
+    /* --- --- */
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+    
+    h1 {
+      text-align: center;
+      color: var(--dark-blue);
+      margin: 0 0 12px;
+      font-size: 2.25rem;
+      font-weight: 800;
+    }
+
+    h2 {
+      margin: 32px 0 16px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+      font-size: 1.5rem;
+      color: var(--dark-blue);
+    }
+    h2:first-of-type {
+      margin-top: 0;
+    }
+
+    p, li {
+      color: var(--text-light);
+      font-size: 1rem;
+    }
+
+    /* 규칙 테이블 */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      margin: 16px 0;
+    }
+    th, td {
+      padding: 12px 16px;
+      border: 1px solid var(--border-color);
+      text-align: center;
+    }
+    thead th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: var(--text-light);
+    }
+    tbody th {
+      background: #f8f9fa;
+      font-weight: 600;
+    }
+    
+    /* 코드 예시 블록 */
+    pre {
+      background: #f9f9f9;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 16px;
+      overflow-x: auto;
+      line-height: 1.5;
+    }
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.9rem;
+      color: #333;
+    }
+    
+    .nav {
+      margin: 12px 0 24px;
+      text-align: center;
+    }
+    
+    .nav a {
+      color: var(--primary-color);
+      text-decoration: none;
+      margin: 0 10px;
+      font-weight: 500;
+    }
+    .nav a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-container">
+      <div class="brand">폭SAC 속았수다</div>
+      <div class="userbox" id="userBox">
+        </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1>게임 소개</h1>
+    <div class="nav">
+      <a href="submit.html">전략 제출</a>
+      <a href="scoreboard.html">스코어보드</a>
+      </div>
+
+    <h2>"죄수의 딜레마"란?</h2>
+    <p>
+      두 명의 플레이어가 '협력' 또는 '배신' 중 하나를 선택하는 게임입니다.<br />
+      두 플레이어의 선택에 따라 각자가 얻는 점수가 달라집니다.
+    </p>
+    <p>
+      이 게임의 '딜레마'는, 두 플레이어 모두에게 최선인 선택이 있지만, 개인의 이익을 쫓다 보면 결국 둘 다 최악의 결과에 도달하게 된다는 점입니다.
+    </p>
+
+    <h2>게임 규칙</h2>
+    <p>
+      모든 참가자는 DB에 저장된 다른 모든 전략과 한 번씩 대결(매치)을 펼칩니다.<br />
+      각 매치는 <strong>80~120턴</strong> 사이의 무작위 길이로 진행되며, 턴마다 점수가 누적됩니다.
+    </p>
+    
+    <strong>점수표 (나, 상대)</strong>
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>상대가 '협력'</th>
+          <th>상대가 '배신'</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>내가 '협력'</th>
+          <td>(나: 3점, 상대: 3점)</td>
+          <td>(나: 0점, 상대: 5점)</td>
+        </tr>
+        <tr>
+          <th>내가 '배신'</th>
+          <td>(나: 5점, 상대: 0점)</td>
+          <td>(나: 1점, 상대: 1점)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      토너먼트 종료 후, 모든 매치에서 얻은 '총 점수'를 '총 턴수'로 나눈 <strong>평균 점수</strong>로 순위가 결정됩니다.
+    </p>
+
+    <h2>코드 제출 방법</h2>
+    <p>
+      Python 함수 <code>strategy</code>를 작성하여 제출해야 합니다. 이 함수는 매 턴마다 호출됩니다.
+    </p>
+    <pre><code>def strategy(opponent_history, my_history):
+    """
+    opponent_history: 상대의 이전 행동 리스트 (e.g., ['협력','배신'])
+    my_history: 나의 이전 행동 리스트 (e.g., ['협력','협력'])
+    
+    반환값: '협력' 또는 '배신'
+    """
+    
+    # 팃포탯 (Tit for Tat) 전략 예시
+    if not opponent_history:
+        # 첫 턴에는 무조건 협력
+        return '협력'
+    
+    # 직전 턴에 상대가 한 행동을 그대로 따라하기
+    if opponent_history[-1] == '협력':
+        return '협력'
+    else:
+        return '배신'
+</code></pre>
+    <ul>
+      <li><code>opponent_history</code>: 상대방의 행동 기록이 리스트로 주어집니다. 턴이 진행될수록 <code>['협력', '배신', '협력', ...]</code>처럼 누적됩니다.</li>
+      <li><code>my_history</code>: 나의 행동 기록이 리스트로 주어집니다.</li>
+      <li>첫 턴에는 두 리스트 모두 비어있습니다. (<code>[]</code>)</li>
+      <li>반환값은 반드시 문자열 <code>'협력'</code> 또는 <code>'배신'</code>이어야 합니다.</li>
+    </ul>
+
+    <h2>기술적 제한</h2>
+    <ul>
+      <li><strong>시간 제한:</strong> 각 매치마다 <strong>총 0.1초(<code>MATCH_TIME_BUDGET_SEC</code>)</strong>의 실행 시간 예산이 주어집니다. 이 시간을 초과하는 계산은 시간초과로 탈락 처리됩니다.</li>
+      <li><strong>무한 루프:</strong> <code>while True:</code>, <code>time.sleep(10)</code> 등 고의적인 지연 코드는 내부 검증 단계에서 적발되어 즉시 탈락 처리됩니다.</li>
+      <li><strong>모듈 제한:</strong> <code>math</code>, <code>random</code>, <code>statistics</code>, <code>itertools</code>와 같은 모듈을 <code>import</code> 하는 것은 불가합니다.
+      <li><strong>금지 행위:</strong> 파일 입출력(<code>open</code>), <code>eval</code>, <code>exec</code> 등 위험한 내장 함수는 모두 차단됩니다.</li>
+    </ul>
+
+  </div>
+
+  <script>
+    const API_BASE_URL = "";
+    const userBoxEl = document.getElementById('userBox');
+    const nick = localStorage.getItem('pd_nick');
+    const pass = localStorage.getItem('pd_pass');
+
+    function logout() {
+      localStorage.removeItem('pd_nick');
+      localStorage.removeItem('pd_pass');
+      location.href = 'login.html';
+    }
+
+    // 로그인 상태 UI 업데이트
+    function updateUserBox(rankText = '순위: -') {
+      if (nick) {
+        userBoxEl.innerHTML = `
+          <span id="myRank" class="rank">${rankText}</span>
+          <button id="logoutBtn" class="logout-btn">로그아웃</button>
+        `;
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+      } else {
+        userBoxEl.innerHTML = `
+          <a href="login.html" class="nav-link">로그인</a>
+        `;
+      }
+    }
+
+    // 내 순위만 간단히 가져오기
+    async function fetchMyRank() {
+      if (!nick) {
+        updateUserBox('순위: -');
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE_URL}/scoreboard?t=${Date.now()}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error(res.statusText);
+        const list = await res.json();
+        
+        const myRankIndex = list.findIndex(x => x.user_name === nick);
+        
+        if (myRankIndex !== -1) {
+          updateUserBox(`순위: ${myRankIndex + 1} / ${list.length}`);
+        } else {
+          updateUserBox('순위: -');
+        }
+      } catch (e) {
+        console.error("순위 로딩 실패:", e);
+        updateUserBox('순위: -');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchMyRank(); // 페이지 로드 시 내 순위만 갱신
+    });
+  </script>
+</body>
+</html>

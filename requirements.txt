@@ -1,0 +1,11 @@
+
+fastapi
+uvicorn[standard]
+
+SQLAlchemy
+asyncpg
+
+passlib
+bcrypt==4.3.0
+
+aiosqlite>=0.19

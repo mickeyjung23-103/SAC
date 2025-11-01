@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>회원가입 | 폭SAC 속았수다</title>
+  <style>
+    :root {
+      --primary-color: #3949ab;
+      --primary-hover: #303f9f;
+      --dark-blue: #1a237e;
+      --success-color: #2e7d32;
+      --success-hover: #1b5e20;
+      --success-bg: #e8f5e9;
+      --error-color: #c62828;
+      --error-bg: #ffebee;
+      --bg-color: #f0f2f5;
+      --card-bg: #ffffff;
+      --text-color: #333;
+      --text-light: #555;
+      --border-color: #ddd;
+      --border-radius: 8px;
+      --shadow: 0 4px 12px rgba(0,0,0,.05);
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    
+    * { box-sizing: border-box; }
+
+    .container {
+      max-width: 440px;
+      margin: 60px auto;
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+    
+    h1 {
+      margin: 0 0 24px;
+      color: var(--dark-blue);
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 800;
+    }
+    
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-light);
+      margin: 16px 0 6px;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(57, 73, 171, 0.15);
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-success {
+      background: var(--success-color);
+      color: #fff;
+    }
+    .btn-success:hover {
+      background: var(--success-hover);
+    }
+    .btn-success:disabled {
+      background: #a5d6a7;
+      cursor: not-allowed;
+    }
+    
+    .nav {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+    .nav a {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .nav a:hover {
+      text-decoration: underline;
+    }
+    
+    .status {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 6px;
+      display: none;
+      white-space: pre-wrap;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      border: 1px solid transparent;
+    }
+    
+    .ok { display: block; background: var(--success-bg); color: var(--success-color); border-color: #b9e0ba; }
+    .err { display: block; background: var(--error-bg); color: var(--error-color); border-color: #f7c5c8; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>회원가입</h1>
+    <label for="nickname">닉네임</label>
+    <input id="nickname" type="text" placeholder="예: TitForTat" />
+
+    <label for="password">비밀번호</label>
+    <input id="password" type="password" placeholder="******" />
+
+    <button id="regBtn" class="btn btn-success">회원가입</button>
+    <div id="status" class="status"></div>
+
+    <div class="nav">
+      <a href="login.html">이미 계정이 있으신가요? 로그인</a>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = "";
+    const statusBox = document.getElementById('status');
+    const regBtn = document.getElementById('regBtn');
+    const nickEl = document.getElementById('nickname');
+    const passEl = document.getElementById('password');
+
+    function showStatus(msg, kind){ 
+      statusBox.textContent = msg; 
+      statusBox.className = 'status';
+      if(kind) statusBox.classList.add(kind);
+      statusBox.style.display = 'block'; 
+    }
+    
+    function setLoading(isLoading) {
+      if (isLoading) {
+        regBtn.disabled = true;
+        regBtn.textContent = '가입 중...';
+      } else {
+        regBtn.disabled = false;
+        regBtn.textContent = '회원가입';
+      }
+    }
+
+    async function handleRegister() {
+      const user_name = nickEl.value.trim();
+      const password = passEl.value;
+      if(!user_name || !password) return showStatus('닉네임과 비밀번호를 입력하세요.', 'err');
+
+      setLoading(true);
+
+      try{
+        const res = await fetch(`${API_BASE_URL}/register`, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          // 회원가입 시에는 빈 코드를 제출합니다.
+          body: JSON.stringify({user_name, password, code:"def strategy(opponent_history, my_history):\n    return '협력'"})
+        });
+        const text = await res.text();
+        let data={}; try{ data = text? JSON.parse(text):{} }catch{ data={detail:text}; }
+        if(!res.ok) {
+           showStatus(`❌ 회원가입 실패\n${data.detail || '알 수 없는 오류'}`, 'err');
+           setLoading(false);
+           return;
+        }
+
+        // 가입 성공 → 로컬 저장 + 소개 페이지로
+        localStorage.setItem('pd_nick', user_name);
+        localStorage.setItem('pd_pass', password);
+        showStatus('✅ 회원가입 완료! 자동으로 이동합니다...', 'ok');
+        
+        // ✅ about.html로 이동
+        setTimeout(()=> location.href='about.html', 800);
+      }catch(e){
+        showStatus(`네트워크 오류: ${e.message}`, 'err');
+        setLoading(false);
+      }
+    }
+    
+    regBtn.addEventListener('click', handleRegister);
+    passEl.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleRegister();
+    });
+    nickEl.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleRegister();
+    });
+  </script>
+</body>
+</html>
