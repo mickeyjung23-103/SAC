@@ -19,7 +19,7 @@ from fastapi.responses import FileResponse
 # --- DB (SQLAlchemy) ---
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Boolean, select, BigInteger
+from sqlalchemy import Column, Integer, String, Boolean, select
 from sqlalchemy.orm import sessionmaker
 
 # --- Security (Password) ---
@@ -146,12 +146,8 @@ class Strategy(Base):
     user_name = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     code_string = Column(String, nullable=False)
-    
-    # ✅ (수정) Integer -> BigInteger
-    total_score = Column(BigInteger, default=0, nullable=False)
-    # ✅ (수정) Integer -> BigInteger
-    avg_score = Column(BigInteger, default=0, nullable=False)
-    
+    total_score = Column(Integer, default=0, nullable=False)
+    avg_score = Column(Integer, default=0, nullable=False)
     error_flag = Column(Boolean, default=False, nullable=False)
     error_message = Column(String, nullable=True)
 
@@ -599,7 +595,7 @@ async def run_tournament(db: AsyncSession):
 
         rounds = count_rounds[s.id]
         if rounds > 0:
-            s.avg_score = int((total_scores[s.id] * (10**10)) / rounds + 0.5)
+            s.avg_score = int((total_scores[s.id] * (10**8)) / rounds + 0.5)
         else:
             s.avg_score = 0
         s.total_score = total_scores[s.id]
